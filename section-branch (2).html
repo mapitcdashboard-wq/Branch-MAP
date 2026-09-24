@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MAP Dashboard — Section &amp; Branch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1519; --panel:#16212A; --panel2:#1D2B35; --panel3:#243642;
+  --line:#2B3D48; --line2:#37505E;
+  --text:#E9EFF1; --muted:#8CA0AC; --faint:#5E727E;
+  --brass:#E0A73C; --brass-dim:#8A6722;
+  --pos:#35C09D; --neg:#E5654B; --none:#5E727E;
+  --r:3px;
+  --disp:"Barlow Condensed",'Arial Narrow',Arial,sans-serif;
+  --body:"Inter",system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--ink); color:var(--text); font-family:var(--body);
+  font-size:14px; line-height:1.45; -webkit-font-smoothing:antialiased;
+}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+button{cursor:pointer;border:none;background:none}
+:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+.eyebrow{font-family:var(--disp);text-transform:uppercase;letter-spacing:.13em;font-weight:600;font-size:11px;color:var(--muted)}
+.num{font-family:var(--disp);font-variant-numeric:tabular-nums;font-weight:600;letter-spacing:.01em}
+.hide{display:none !important}
+
+/* ---------- LOGIN ---------- */
+#gate{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.gate-card{width:100%;max-width:430px}
+.gate-mark{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.gate-mark b{font-family:var(--disp);font-size:34px;font-weight:700;letter-spacing:.02em;line-height:1}
+.gate-mark span{font-family:var(--disp);text-transform:uppercase;letter-spacing:.18em;font-size:11px;color:var(--brass)}
+.gate-sub{color:var(--muted);font-size:13px;margin:0 0 26px}
+.gate-box{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:22px}
+.roles{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px}
+.role{border:1px solid var(--line);border-radius:var(--r);padding:13px 12px;text-align:left;transition:.15s;background:var(--panel2)}
+.role:hover{border-color:var(--line2)}
+.role.on{border-color:var(--brass);background:rgba(224,167,60,.09)}
+.role b{display:block;font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:.02em}
+.role i{display:block;font-style:normal;font-size:11px;color:var(--muted);margin-top:2px}
+.role.on i{color:var(--brass)}
+.fld{margin-bottom:14px}
+.fld label{display:block;margin-bottom:6px}
+.inp{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:var(--r);padding:10px 11px;color:var(--text)}
+.inp:focus{border-color:var(--brass);outline:none}
+select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 16px) 50%,calc(100% - 11px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px}
+.signin{width:100%;background:var(--brass);color:#14100A;font-family:var(--disp);text-transform:uppercase;letter-spacing:.1em;font-weight:700;font-size:15px;padding:12px;border-radius:var(--r);margin-top:6px}
+.signin:hover{background:#EEB752}
+.err{color:var(--neg);font-size:12px;margin-top:10px;min-height:16px}
+.gate-note{font-size:11px;color:var(--faint);margin-top:16px;line-height:1.6}
+.gate-note code{background:var(--panel2);padding:1px 5px;border-radius:2px;color:var(--muted)}
+
+/* ---------- APP CHROME ---------- */
+#app{max-width:1240px;margin:0 auto;padding:0 20px 70px}
+.top{display:flex;align-items:center;gap:14px;padding:16px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.who{flex:1;min-width:200px}
+.who .eyebrow{display:block;margin-bottom:1px}
+.who b{font-family:var(--disp);font-size:26px;font-weight:700;letter-spacing:.02em;line-height:1.05;display:block}
+.who i{font-style:normal;font-size:12px;color:var(--muted)}
+.rankchip{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:var(--r);padding:9px 15px}
+.rankchip .v{font-family:var(--disp);font-size:29px;font-weight:700;line-height:1;color:var(--brass)}
+.rankchip .v small{font-size:14px;color:var(--muted);font-weight:500}
+.rankchip .l{font-size:11px;color:var(--muted);line-height:1.3;max-width:130px}
+.out{border:1px solid var(--line);border-radius:var(--r);padding:8px 13px;font-size:12px;color:var(--muted)}
+.out:hover{border-color:var(--line2);color:var(--text)}
+
+/* ---------- FILTERS ---------- */
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;padding:15px 0;border-bottom:1px solid var(--line)}
+.f{display:flex;flex-direction:column;gap:5px}
+.f .eyebrow{font-size:10px}
+.f select,.f input{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:7px 10px;color:var(--text);font-size:13px;min-width:130px}
+.f select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 15px) 50%,calc(100% - 10px) 50%;background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:30px}
+.f select:focus,.f input:focus{border-color:var(--brass);outline:none}
+.reset{padding:7px 12px;font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:var(--r)}
+.reset:hover{color:var(--text);border-color:var(--line2)}
+.scope{margin-left:auto;display:flex;gap:0;border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.scope button{padding:7px 13px;font-size:12px;color:var(--muted);background:var(--panel)}
+.scope button.on{background:var(--brass);color:#14100A;font-weight:600}
+
+/* ---------- KPI ---------- */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(158px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);margin:20px 0;overflow:hidden}
+.kpi{background:var(--panel);padding:15px 16px}
+.kpi .eyebrow{display:block;margin-bottom:7px}
+.kpi .v{font-family:var(--disp);font-size:36px;font-weight:700;line-height:1;letter-spacing:-.01em}
+.kpi .v small{font-size:16px;color:var(--muted);font-weight:500;margin-left:1px}
+.kpi .d{font-size:11px;color:var(--muted);margin-top:5px}
+.pos{color:var(--pos)} .neg{color:var(--neg)} .bra{color:var(--brass)} .non{color:var(--none)}
+
+/* ---------- SECTIONS ---------- */
+.block{margin:30px 0 0;min-width:0}
+.bhead{display:flex;align-items:baseline;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.bhead h2{font-family:var(--disp);font-size:19px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin:0}
+.bhead p{margin:0;font-size:12px;color:var(--muted);flex:1;min-width:180px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px}
+@media(max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- LADDER (signature) ---------- */
+.ladder{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.lrow{display:grid;grid-template-columns:38px 1fr 62px;align-items:center;gap:10px;padding:8px 13px;border-bottom:1px solid rgba(43,61,72,.6);position:relative}
+.lrow:last-child{border-bottom:none}
+.lrow.me{background:linear-gradient(90deg,rgba(224,167,60,.14),rgba(224,167,60,.03));box-shadow:inset 3px 0 0 var(--brass)}
+.lrow.gapmark{border-bottom:1px dashed var(--line2)}
+.lrk{font-family:var(--disp);font-size:17px;font-weight:600;color:var(--faint);text-align:right}
+.lrow.me .lrk{color:var(--brass);font-size:19px}
+.lnm{min-width:0}
+.lnm b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lnm i{font-style:normal;font-size:10.5px;color:var(--faint)}
+.lbar{height:3px;background:var(--panel3);border-radius:2px;margin-top:5px;overflow:hidden}
+.lbar span{display:block;height:100%;background:var(--line2)}
+.lrow.me .lbar span{background:var(--brass)}
+.lsc{font-family:var(--disp);font-size:19px;font-weight:600;text-align:right;line-height:1.15}
+.lsc em{display:block;font-style:normal;font-size:10.5px;font-weight:500;color:var(--faint);letter-spacing:.02em}
+.lgap{padding:8px 13px;font-size:11.5px;color:var(--brass);background:rgba(224,167,60,.06);border-bottom:1px solid var(--line);display:flex;gap:7px;align-items:center}
+.lgap svg{flex:none}
+.lfoot{padding:9px 13px;font-size:11px;color:var(--faint);border-top:1px solid var(--line)}
+
+/* ---------- TABLES ---------- */
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl thead th{font-family:var(--disp);text-transform:uppercase;letter-spacing:.09em;font-size:10.5px;font-weight:600;color:var(--muted);text-align:right;padding:8px 9px;border-bottom:1px solid var(--line2);white-space:nowrap;background:var(--panel);position:sticky;top:0;z-index:2}
+.tbl thead th:first-child{text-align:left}
+.tbl thead th.s{cursor:pointer;user-select:none}
+.tbl thead th.s:hover{color:var(--text)}
+.tbl thead th .ar{color:var(--brass);font-size:9px}
+.tbl td{padding:8px 9px;border-bottom:1px solid rgba(43,61,72,.55);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl td:first-child{text-align:left;white-space:normal;min-width:200px}
+.tbl thead th:first-child{min-width:200px}
+.tbl tbody tr:hover{background:rgba(255,255,255,.022)}
+.tbl tbody tr.clk{cursor:pointer}
+.tbl tbody tr.sel{background:rgba(224,167,60,.1)}
+.wrap{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:auto;max-height:560px}
+.pname{display:block;font-weight:600;font-size:13px}
+.pmeta{display:block;font-size:10.5px;color:var(--faint);margin-top:1px}
+.pstat{display:block;margin-top:4px}
+.tag{display:inline-block;font-family:var(--disp);font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:1px 6px;border-radius:2px;border:1px solid var(--line2);color:var(--muted);font-weight:600}
+.tag.ok{color:var(--pos);border-color:rgba(53,192,157,.45);background:rgba(53,192,157,.09)}
+.tag.no{color:var(--neg);border-color:rgba(229,101,75,.45);background:rgba(229,101,75,.09)}
+.tag.nd{color:var(--none);border-color:var(--line)}
+.mini{position:relative;height:5px;background:var(--panel3);border-radius:3px;min-width:74px;overflow:hidden;margin-top:5px}
+.mini span{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.mini u{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:var(--brass);text-decoration:none}
+.empty{padding:40px 20px;text-align:center;color:var(--faint);font-size:13px}
+.foot{margin-top:34px;padding-top:16px;border-top:1px solid var(--line);font-size:11px;color:var(--faint);line-height:1.75}
+.foot b{color:var(--muted);font-weight:600}
+@media(max-width:560px){
+  #app{padding:0 13px 56px}
+  .kpi .v{font-size:29px}
+  .who b{font-size:22px}
+  .rankchip{padding:8px 12px}
+  .f select,.f input{min-width:114px}
+  .tbl{font-size:12px}
+}
+
+/* ---------- PACE ---------- */
+.pace{display:flex;flex-direction:column;gap:2px;padding:8px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--panel)}
+.pace b{font-family:var(--disp);font-size:15px;font-weight:600;letter-spacing:.03em;color:var(--brass);line-height:1.1}
+.pace i{font-style:normal;font-size:10.5px;color:var(--muted)}
+.pace select{margin-top:3px;background:var(--ink);border:1px solid var(--line);color:var(--text);border-radius:2px;font-size:11px;padding:2px 4px}
+
+/* ---------- CHANNEL CARDS ---------- */
+.chans{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}
+.chan{background:var(--panel);border:1px solid var(--line);border-top:2px solid var(--line2);border-radius:var(--r);padding:14px 15px}
+.chan.lead{border-top-color:var(--brass)}
+.chan .ch-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:9px}
+.chan .ch-nm{font-family:var(--disp);font-size:17px;font-weight:600;letter-spacing:.05em}
+.chan .ch-rk{font-size:11px;color:var(--muted)}
+.chan .ch-rk b{font-family:var(--disp);font-size:15px;color:var(--brass);font-weight:600}
+.chan .ch-v{font-family:var(--disp);font-size:32px;font-weight:700;line-height:1}
+.chan .ch-v small{font-size:14px;color:var(--muted);font-weight:500}
+.chan .ch-d{font-size:11px;color:var(--muted);margin-top:5px}
+.chan .ch-bar{height:4px;background:var(--panel3);border-radius:3px;margin-top:9px;position:relative;overflow:hidden}
+.chan .ch-bar span{position:absolute;left:0;top:0;bottom:0;border-radius:3px}
+.chan .ch-bar u{position:absolute;top:-2px;bottom:-2px;width:1.5px;background:var(--brass);text-decoration:none}
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- ============ SIGN IN ============ -->
+<div id="gate">
+  <div class="gate-card">
+    <div class="gate-mark"><b>MAP</b><span>Section &amp; Branch</span></div>
+    <p class="gate-sub">Your section or branch against the Market Action Plan.</p>
+    <div class="gate-box">
+      <div class="fld">
+        <label class="eyebrow" for="code">Access key</label>
+        <input class="inp" type="text" id="code" placeholder="e.g. BL1001K" maxlength="14"
+               autocomplete="off" autocapitalize="characters" spellcheck="false"
+               style="letter-spacing:.14em;font-family:ui-monospace,Menlo,monospace">
+      </div>
+      <label style="display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);margin-bottom:6px">
+        <input type="checkbox" id="remember" checked style="accent-color:var(--brass)"> Remember me on this device
+      </label>
+      <button class="signin" id="signin">Open my dashboard</button>
+      <div class="err" id="err"></div>
+    </div>
+    <p class="gate-note">
+      Your key decides what you see — an Area Executive gets their own section, a Branch
+      Manager their own branch. Figures come from the latest upload in the admin panel.
+      Your key is your section or branch code plus a letter. Lost it, or seeing the wrong section? Ask your branch admin to reset it.
+    </p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hide">
+  <header class="top">
+    <div class="who">
+      <span class="eyebrow" id="whoEye"></span>
+      <b id="whoName"></b>
+      <i id="whoSub"></i>
+    </div>
+    <div class="rankchip">
+      <div class="v" id="rkVal">—</div>
+      <div class="l" id="rkLbl"></div>
+    </div>
+    <div class="pace" id="pace"></div>
+    <button class="out" id="logout">Sign out</button>
+  </header>
+
+  <div id="loading"><div class="empty">Loading…</div></div>
+  <div class="filters" id="filters"></div>
+  <div class="kpis" id="kpis"></div>
+
+  <div class="block hide" id="chanBlock">
+    <div class="bhead"><h2>By channel</h2><p id="chanNote"></p></div>
+    <div class="chans" id="chans"></div>
+  </div>
+
+  <div class="grid2">
+    <div class="block" style="margin-top:0">
+      <div class="bhead"><h2 id="ladTitle">Standings</h2></div>
+      <div class="ladder" id="ladder"></div>
+    </div>
+    <div class="block" style="margin-top:0">
+      <div class="bhead">
+        <h2>MAP parameters</h2>
+        <p id="paramNote"></p>
+      </div>
+      <div class="wrap"><table class="tbl" id="ptbl"></table></div>
+    </div>
+  </div>
+
+  <div class="block">
+    <div class="bhead">
+      <h2 id="drillTitle">Breakdown</h2>
+      <p id="drillNote"></p>
+    </div>
+    <div class="wrap"><table class="tbl" id="dtbl"></table></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const CONFIG = {
+  passAE: 'ae@map',
+  passBM: 'bm@map',
+  districtName: 'District',
+
+  // Month-to-date pace. A parameter is on target once achievement reaches
+  // the gate for the week the data runs to.
+  phase: { 1: 0.21, 2: 0.45, 3: 0.70, 4: 1.00 },
+  week: 3                    // Aug 26 data runs to week 3
+};
+const gate = () => (CONFIG.phase[CONFIG.week] ?? 1) * 100;
+
+/* ============================================================
+   DATA — loaded from the WD portal's Supabase project via RPC.
+   Nothing is read from a table directly: sb_detail() returns only the
+   caller's own section or branch, and sb_peers() returns peer totals
+   per parameter with no WD detail in them.
+   ============================================================ */
+const SUPABASE_URL = 'https://umqnmorzlallgtmternj.supabase.co';
+const CODE_KEY = 'map_sb_code';
+const SUPABASE_ANON_KEY = 'YOUR-ANON-OR-PUBLISHABLE-KEY';
+const SB = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+const R = { B:0, C:1, S:2, W:3, CY:4, P:5, T:6, A:7, LM:8, L3:9 };
+
+let D = null, PM = null, ME = null;
+let secsOfBranch, cirsOfBranch, rowsOfSection, rowsOfBranch, wdsOfSection;
+
+/* Build the same in-memory shape the offline build uses, so every
+   scoring and rendering function below works unchanged. Peer rows arrive
+   already totalled by parameter; one synthetic row per peer and parameter
+   sums to exactly the same figures. */
+function buildD(me, detail, peers, params) {
+  const sIdx = new Map(), bIdx = new Map(), cIdx = new Map(),
+        wIdx = new Map(), cyIdx = new Map(), pIdx = new Map();
+  const put = (m, v) => { if (v == null) v = ''; if (!m.has(v)) m.set(v, m.size); return m.get(v); };
+
+  params.forEach(p => put(pIdx, p.param));
+  const paramMeta = [];
+  pIdx.forEach((i, name) => {
+    const m = params.find(x => x.param === name) || {};
+    paramMeta[i] = { channel: m.channel || '', metric: m.metric || '', plevel: '', pvalue: '' };
+  });
+
+  const secBranch = [], secCircle = [], secChannel = [], secWdCount = [], cirBranch = [];
+  const rows = [];
+
+  // my own detail, at WD level
+  detail.forEach(r => {
+    const b = put(bIdx, r.branch_code), c = put(cIdx, r.circle_code),
+          s = put(sIdx, r.section_code), w = put(wIdx, r.wd_code),
+          cy = put(cyIdx, r.city || ''), p = pIdx.get(r.param);
+    if (p == null) return;
+    secBranch[s] = b; secCircle[s] = c; cirBranch[c] = b;
+    rows.push([b, c, s, w, cy, p,
+      r.target == null ? null : +r.target,
+      r.actual == null ? null : +r.actual,
+      r.lm     == null ? null : +r.lm,
+      r.l3m    == null ? null : +r.l3m]);
+  });
+
+  // peers, as one pre-totalled row per parameter
+  const peerWd = new Map();
+  peers.forEach(r => {
+    const p = pIdx.get(r.param);
+    if (p == null) return;
+    // sb_peers includes me. My own figures already arrived at WD level in
+    // sb_detail, so taking the aggregate too would count them twice and
+    // invent a phantom distributor.
+    if (r.peer_kind === 'section' && r.peer_code === me.section_code) return;
+    if (r.peer_kind === 'branch'  && r.peer_code === me.branch_code)  return;
+    const b = put(bIdx, r.branch_code || r.peer_code);
+    let s;
+    if (r.peer_kind === 'section') {
+      s = put(sIdx, r.peer_code);
+      const c = put(cIdx, r.circle_code || '');
+      secBranch[s] = b; secCircle[s] = c; cirBranch[c] = b;
+      if (r.channel) secChannel[s] = r.channel;
+      secWdCount[s] = r.wd_count || 0;
+    } else {
+      s = put(sIdx, '#' + r.peer_code);      // placeholder: branch peers have no section
+      secBranch[s] = b;
+    }
+    // one dummy WD per peer, so the duplicate guard in aggregate() cannot
+    // collapse two peers' rows into one
+    const dk = '#' + r.peer_kind + ':' + r.peer_code;
+    const w = put(wIdx, dk);
+    peerWd.set(r.peer_code, w);
+    rows.push([b, put(cIdx, r.circle_code || ''), s, w, put(cyIdx, ''), p,
+      r.target == null ? null : +r.target,
+      r.actual == null ? null : +r.actual,
+      r.lm     == null ? null : +r.lm,
+      r.l3m    == null ? null : +r.l3m,
+      r.peer_kind]);
+  });
+
+  const inv = m => { const a = []; m.forEach((i, v) => a[i] = v); return a; };
+  const wds = inv(wIdx);
+
+  const built = {
+    generated: 'live from the WD portal',
+    branches: inv(bIdx), circles: inv(cIdx), sections: inv(sIdx),
+    wds, wdNames: wds.map(w => {
+      const d = detail.find(x => x.wd_code === w);
+      return d ? (d.wd_name || w) : w;
+    }),
+    cities: inv(cyIdx), params: inv(pIdx), paramMeta,
+    secBranch, secCircle, secChannel, secWdCount, cirBranch,
+    rows, peerKind: new Map()
+  };
+
+  // my own section's channel and WD count come from my real rows
+  if (me.role === 'ae') {
+    const s = sIdx.get(me.section_code);
+    if (s != null) {
+      built.secChannel[s] = me.channel || built.secChannel[s] || '';
+      built.secWdCount[s] = me.wd_count || 0;
+    }
+  }
+  built.sections.forEach((_, s) => { if (!built.secChannel[s]) built.secChannel[s] = ''; });
+  return built;
+}
+
+function indexD() {
+  secsOfBranch = D.branches.map(() => []);
+  D.secBranch.forEach((b, s) => { if (b != null && !D.sections[s].startsWith('#')) secsOfBranch[b].push(s); });
+  cirsOfBranch = D.branches.map(() => []);
+  D.cirBranch.forEach((b, c) => { if (b != null) cirsOfBranch[b].push(c); });
+
+  rowsOfSection = D.sections.map(() => []);
+  rowsOfBranch  = D.branches.map(() => []);
+  D.rows.forEach(r => { rowsOfSection[r[R.S]].push(r); rowsOfBranch[r[R.B]].push(r); });
+
+  wdsOfSection = D.sections.map(() => new Set());
+  D.rows.forEach(r => wdsOfSection[r[R.S]].add(r[R.W]));
+  PM = D.paramMeta;
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const S = {
+  role: 'ae', sec: null, br: null,
+  scope: { channel: '', param: '' },
+  drill: { circle: '', section: '', wd: '' },
+  show: 'all',
+  sortP: { k: 'ach', d: 1 },
+  sortD: { k: 'ach', d: 1 }
+};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const el = (t, c, h) => { const n = document.createElement(t); if (c) n.className = c; if (h != null) n.innerHTML = h; return n; };
+const plur = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const esc = s => String(s ?? '').replace(/[&<>"]/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[m]));
+
+function fmtVal(v) {
+  if (v == null) return '—';
+  const a = Math.abs(v);
+  if (a === 0) return '0';
+  if (a < 10) return v.toFixed(2);
+  if (a < 1000) return v.toFixed(0);
+  return v.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+}
+function signPct(v) {
+  if (v == null || !isFinite(v)) return '<span class="non">—</span>';
+  return `<span class="${v >= 0 ? 'pos' : 'neg'}">${v >= 0 ? '+' : ''}${v.toFixed(1)}%</span>`;
+}
+function ordinal(n) { const s = ['th','st','nd','rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }
+
+/* Colour by distance from this week's gate, not from 100%. */
+function achClass(ach) {
+  if (ach == null) return 'non';
+  const g = gate();
+  if (ach >= g) return 'pos';
+  if (ach >= g * 0.85) return 'bra';
+  return 'neg';
+}
+const barColour = ach => ({ pos: 'var(--pos)', bra: 'var(--brass)', neg: 'var(--neg)', non: 'var(--none)' })[achClass(ach)];
+
+function paramInScope(p) {
+  const m = PM[p], f = S.scope;
+  if (f.channel && m.channel !== f.channel) return false;
+  if (f.param && D.params[p] !== f.param) return false;
+  return true;
+}
+const scopeMask = () => D.params.map((_, p) => paramInScope(p));
+
+/* ============================================================
+   SCORING
+   ============================================================ */
+function aggregate(rows, mask) {
+  const m = new Map();
+  // CO4162 and CO4163 sit in two sections each, so a branch-level row set
+  // holds them twice. Within any one scope a WD should count once per
+  // parameter, so the same pair is never added twice.
+  const seen = new Set();
+  for (const r of rows) {
+    const p = r[R.P];
+    if (mask && !mask[p]) continue;
+    const dk = r[R.W] + '|' + p;
+    if (seen.has(dk)) continue;
+    seen.add(dk);
+    let e = m.get(p);
+    if (!e) { e = { p, t:0, a:0, lm:0, l3:0, nA:0, wds:new Set() }; m.set(p, e); }
+    if (r[R.T]  != null) e.t  += r[R.T];
+    if (r[R.A]  != null) { e.a += r[R.A]; e.nA++; }
+    if (r[R.LM] != null) e.lm += r[R.LM];
+    if (r[R.L3] != null) e.l3 += r[R.L3];
+    e.wds.add(r[R.W]);
+  }
+  const ph = CONFIG.phase[CONFIG.week] ?? 1;
+  for (const e of m.values()) {
+    e.scorable = e.t > 0 && e.nA > 0;
+    e.ach   = e.scorable ? 100 * e.a / e.t : null;
+    e.paced = e.scorable ? e.t * ph : null;          // what week N asks for
+    e.hit   = e.scorable ? e.ach >= gate() - 1e-9 : null;
+    e.gLM   = (e.nA > 0 && e.lm > 0) ? 100 * (e.a - e.lm) / e.lm : null;
+    e.gL3   = (e.nA > 0 && e.l3 > 0) ? 100 * (e.a - e.l3) / e.l3 : null;
+  }
+  return m;
+}
+
+function summarise(m) {
+  const all = [...m.values()], sc = all.filter(e => e.scorable);
+  const avg = a => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+  const hit = sc.filter(e => e.hit).length;
+  return {
+    total: all.length, scorable: sc.length, hit, short: sc.length - hit,
+    nodata: all.length - sc.length,
+    ach: avg(sc.map(e => e.ach)),
+    gLM: avg(all.filter(e => e.gLM != null).map(e => e.gLM)),
+    gL3: avg(all.filter(e => e.gL3 != null).map(e => e.gL3))
+  };
+}
+
+/* Everything ranks on Achvd %, and on exactly the number shown, so a ladder
+   always reads top to bottom. */
+const rankValue = s => s.ach == null ? -1 : s.ach;
+
+function buildLadder(items) {
+  items.forEach(i => i.rv = rankValue(i.stat));
+  items.sort((a, b) => b.rv - a.rv || String(a.label).localeCompare(String(b.label)));
+  let last = null, rk = 0;
+  items.forEach((i, idx) => {
+    if (last === null || Math.abs(i.rv - last) > 1e-9) { rk = idx + 1; last = i.rv; }
+    i.rank = rk;
+  });
+  return items;
+}
+
+/* ============================================================
+   PEER GROUPS
+   ============================================================ */
+function sectionPeers() {
+  const mask = scopeMask();
+  const myBranch = D.secBranch[S.sec], myChan = D.secChannel[S.sec];
+  return buildLadder(secsOfBranch[myBranch]
+    .filter(s => D.secChannel[s] === myChan)
+    .map(s => ({
+      id: s, label: D.sections[s],
+      sub: D.circles[D.secCircle[s]] + ' · ' + plur(D.secWdCount[s] || wdsOfSection[s].size, 'WD'),
+      stat: summarise(aggregate(rowsOfSection[s], mask))
+    })).filter(i => i.stat.scorable > 0));
+}
+
+function branchPeers() {
+  const mask = scopeMask();
+  return buildLadder(D.branches.map((b, i) => ({
+    id: i, label: b,
+    sub: plur(new Set(rowsOfBranch[i].map(r => r[R.W])).size, 'WD group'),
+    stat: summarise(aggregate(rowsOfBranch[i], mask))
+  })).filter(i => i.stat.scorable > 0));
+}
+
+/* Branch ranks inside one channel — the fairer comparison, since CFP focus
+   brands differ by branch while the grocery channels are common to all. */
+function branchChannelLadder(channel) {
+  const mask = D.params.map((_, p) => PM[p].channel === channel);
+  return buildLadder(D.branches.map((b, i) => ({
+    id: i, label: b, sub: '',
+    stat: summarise(aggregate(rowsOfBranch[i], mask))
+  })).filter(i => i.stat.scorable > 0));
+}
+
+function paramRanks() {
+  const ae = S.role === 'ae';
+  const group = ae
+    ? secsOfBranch[D.secBranch[S.sec]].filter(s => D.secChannel[s] === D.secChannel[S.sec])
+    : D.branches.map((_, i) => i);
+  const me = ae ? S.sec : S.br;
+  const rows = id => ae ? rowsOfSection[id] : rowsOfBranch[id];
+  const mask = scopeMask();
+  const per = group.map(id => ({ id, m: aggregate(rows(id), mask) }));
+  const ps = new Set(); per.forEach(x => x.m.forEach((_, p) => ps.add(p)));
+  const out = new Map();
+  ps.forEach(p => {
+    const list = per.map(x => ({ id: x.id, e: x.m.get(p) }))
+      .filter(x => x.e && x.e.scorable).sort((a, b) => b.e.ach - a.e.ach);
+    const i = list.findIndex(x => x.id === me);
+    if (i >= 0) out.set(p, { rank: i + 1, of: list.length });
+  });
+  return out;
+}
+
+function activeRows() {
+  const mask = scopeMask();
+  let rows = (S.role === 'ae' ? rowsOfSection[S.sec] : rowsOfBranch[S.br]).filter(r => mask[r[R.P]]);
+  if (S.role === 'bm') {
+    if (S.drill.circle)  rows = rows.filter(r => D.circles[r[R.C]] === S.drill.circle);
+    if (S.drill.section) rows = rows.filter(r => D.sections[r[R.S]] === S.drill.section);
+  } else if (S.drill.wd) {
+    rows = rows.filter(r => D.wds[r[R.W]] === S.drill.wd);
+  }
+  return rows;
+}
+const drillActive = () => S.role === 'bm'
+  ? !!(S.drill.circle || S.drill.section) : !!S.drill.wd;
+
+/* ============================================================
+   SIGN IN — the access code is the credential. Every RPC below takes
+   it, and the database resolves it to exactly one section or branch.
+   ============================================================ */
+let CODE = null;
+
+async function loadAll(code) {
+  CODE = code;
+  $('loading').classList.remove('hide');
+  $('app').classList.remove('hide');
+  $('gate').classList.add('hide');
+  try {
+    const me = await SB.rpc('sb_login_check', { p_code: code });
+    if (me.error) throw me.error;
+    if (!me.data || !me.data.length) throw new Error('That access key is not recognised.');
+    ME = me.data[0];
+    S.role = ME.role;
+    if (ME.current_week) CONFIG.week = ME.current_week;
+    if (ME.district_name) CONFIG.districtName = ME.district_name;
+
+    const [detail, peers, params] = await Promise.all([
+      SB.rpc('sb_detail', { p_code: code }),
+      SB.rpc('sb_peers',  { p_code: code, all_channels: false }),
+      SB.rpc('sb_params', { p_code: code })
+    ]);
+    for (const r of [detail, peers, params]) if (r.error) throw r.error;
+    if (!detail.data.length) {
+      throw new Error('No data for your ' + (ME.role === 'ae' ? 'section' : 'branch') +
+                      ' in the current cycle. Check with your branch admin.');
+    }
+
+    D = buildD(ME, detail.data, peers.data, params.data);
+    indexD();
+    S.sec = ME.role === 'ae' ? D.sections.indexOf(ME.section_code) : null;
+    S.br  = D.branches.indexOf(ME.branch_code);
+    S.drill = { circle:'', section:'', wd:'' };
+    S.scope = { channel:'', param:'' };
+    $('loading').classList.add('hide');
+    render();
+  } catch (e) {
+    // A bad stored code must not trap the person on a dead screen.
+    try { localStorage.removeItem(CODE_KEY); } catch (_) {}
+    $('loading').classList.add('hide');
+    $('app').classList.add('hide');
+    $('gate').classList.remove('hide');
+    $('err').textContent = e.message || String(e);
+  }
+}
+
+$('signin').onclick = async () => {
+  const code = $('code').value.trim().toUpperCase();
+  if (!code) { $('err').textContent = 'Enter your access key.'; return; }
+  $('err').textContent = '';
+  $('signin').disabled = true; $('signin').textContent = 'Opening…';
+  if ($('remember').checked) { try { localStorage.setItem(CODE_KEY, code); } catch (_) {} }
+  await loadAll(code);
+  $('signin').disabled = false; $('signin').textContent = 'Open my dashboard';
+};
+$('code').addEventListener('keydown', e => { if (e.key === 'Enter') $('signin').click(); });
+$('logout').onclick = () => {
+  try { localStorage.removeItem(CODE_KEY); } catch (_) {}
+  CODE = null; D = null; ME = null;
+  $('app').classList.add('hide'); $('gate').classList.remove('hide');
+  $('code').value = ''; $('err').textContent = '';
+};
+
+/* ============================================================
+   FILTERS  (channel, parameter, one drill, show — nothing else)
+   ============================================================ */
+const opts = (list, cur, any) =>
+  `<option value="">${any}</option>` +
+  list.map(v => `<option value="${esc(v)}"${v === cur ? ' selected' : ''}>${esc(v)}</option>`).join('');
+
+function renderFilters() {
+  const ae = S.role === 'ae';
+  const mine = new Set((ae ? rowsOfSection[S.sec] : rowsOfBranch[S.br]).map(r => r[R.P]));
+  const myChans = [...new Set([...mine].map(p => PM[p].channel))].sort();
+  const myParams = D.params.filter((_, p) => mine.has(p) && (!S.scope.channel || PM[p].channel === S.scope.channel));
+
+  let h = `
+  <div class="f"><span class="eyebrow">Channel</span><select data-k="channel">${opts(myChans, S.scope.channel, 'All channels')}</select></div>
+  <div class="f"><span class="eyebrow">MAP parameter</span><select data-k="param">${opts(myParams, S.scope.param, 'All parameters')}</select></div>`;
+
+  if (ae) {
+    const wds = [...wdsOfSection[S.sec]].map(w => D.wds[w]).sort();
+    h += `<div class="f"><span class="eyebrow">Distributor</span><select data-d="wd">${opts(wds, S.drill.wd, 'All WDs')}</select></div>`;
+  } else {
+    const cirs = cirsOfBranch[S.br].map(c => D.circles[c]).sort();
+    let secs = secsOfBranch[S.br];
+    if (S.drill.circle) secs = secs.filter(s => D.circles[D.secCircle[s]] === S.drill.circle);
+    h += `<div class="f"><span class="eyebrow">Circle</span><select data-d="circle">${opts(cirs, S.drill.circle, 'All circles')}</select></div>
+          <div class="f"><span class="eyebrow">Section</span><select data-d="section">${opts(secs.map(s => D.sections[s]).sort(), S.drill.section, 'All sections')}</select></div>`;
+  }
+
+  h += `<div class="f"><span class="eyebrow">Show</span><select data-s="show">
+        <option value="all"${S.show === 'all' ? ' selected' : ''}>All parameters</option>
+        <option value="hit"${S.show === 'hit' ? ' selected' : ''}>On target</option>
+        <option value="miss"${S.show === 'miss' ? ' selected' : ''}>Behind pace</option>
+        <option value="nd"${S.show === 'nd' ? ' selected' : ''}>Awaiting data</option></select></div>
+      <button class="reset" id="reset">Clear filters</button>`;
+
+  const f = $('filters');
+  f.innerHTML = h;
+  f.querySelectorAll('[data-k]').forEach(s => s.onchange = () => {
+    S.scope[s.dataset.k] = s.value;
+    if (s.dataset.k === 'channel') S.scope.param = '';
+    render();
+  });
+  f.querySelectorAll('[data-d]').forEach(s => s.onchange = () => {
+    S.drill[s.dataset.d] = s.value;
+    if (s.dataset.d === 'circle') S.drill.section = '';
+    render();
+  });
+  f.querySelectorAll('[data-s]').forEach(s => s.onchange = () => { S[s.dataset.s] = s.value; render(); });
+  $('reset').onclick = () => {
+    S.scope = { channel:'', param:'' };
+    S.drill = { circle:'', section:'', wd:'' };
+    S.show = 'all';
+    render();
+  };
+}
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+function render() {
+  const ae = S.role === 'ae';
+  renderFilters();
+
+  if (ae) {
+    $('whoEye').textContent = 'Area Executive · Section';
+    $('whoName').textContent = D.sections[S.sec];
+    $('whoSub').textContent = `Branch ${D.branches[S.br]} · Circle ${D.circles[D.secCircle[S.sec]]} · ` +
+      `${D.secChannel[S.sec]} · ${plur(ME.wd_count, 'distributor')}`;
+  } else {
+    $('whoEye').textContent = 'Branch Manager · Branch';
+    $('whoName').textContent = D.branches[S.br];
+    $('whoSub').textContent = `${plur(ME.section_count, 'section')} · ` +
+      `${plur(ME.circle_count, 'circle')} · ` +
+      `${plur(ME.wd_count, 'distributor')}`;
+  }
+
+  // The week is set centrally in the admin panel, so everyone is measured
+  // against the same gate. No per-user override here.
+  $('pace').innerHTML =
+    `<b>Week ${CONFIG.week} · ${gate().toFixed(0)}%</b>
+     <i>on target = ${gate().toFixed(0)}% of month target</i>
+     <i style="color:var(--faint)">cycle ${esc(ME.cycle || '')}</i>`;
+
+  const items = ae ? sectionPeers() : branchPeers();
+  const me = items.find(i => i.id === (ae ? S.sec : S.br));
+  const inGroup = ae
+    ? `${D.secChannel[S.sec]} sections in ${D.branches[S.br]}`
+    : `branches in the ${CONFIG.districtName}`;
+
+  if (me) {
+    $('rkVal').innerHTML = `${me.rank}<small>/${items.length}</small>`;
+    $('rkLbl').textContent = `${ordinal(me.rank)} of ${items.length} ${inGroup} on Achvd %`;
+  } else {
+    $('rkVal').innerHTML = '—';
+    $('rkLbl').textContent = 'No scorable parameters in this view';
+  }
+  $('ladTitle').textContent = ae ? 'Section standings' : 'Branch standings';
+  renderLadder(items, me, inGroup);
+
+  const agg = aggregate(activeRows(), null), sum = summarise(agg);
+  $('kpis').innerHTML = [
+    kpi('Achvd', sum.ach == null ? '—' : sum.ach.toFixed(0), '%',
+        `week ${CONFIG.week} needs ${gate().toFixed(0)}%`, achClass(sum.ach)),
+    kpi('On target', String(sum.hit), `/${sum.scorable}`,
+        `${sum.short} behind pace${sum.nodata ? ` · ${sum.nodata} awaiting data` : ''}`, 'bra'),
+    kpi('vs last month', sum.gLM == null ? '—' : (sum.gLM >= 0 ? '+' : '') + sum.gLM.toFixed(1), '%',
+        'average movement on actuals', sum.gLM == null ? 'non' : sum.gLM >= 0 ? 'pos' : 'neg'),
+    kpi('vs L3M average', sum.gL3 == null ? '—' : (sum.gL3 >= 0 ? '+' : '') + sum.gL3.toFixed(1), '%',
+        'average movement on actuals', sum.gL3 == null ? 'non' : sum.gL3 >= 0 ? 'pos' : 'neg')
+  ].join('');
+
+  renderChannels(ae);
+
+  $('paramNote').innerHTML = drillActive()
+    ? `Filtered to <b style="color:var(--brass)">${esc(S.drill.section || S.drill.circle || S.drill.wd)}</b>. The rank above stays at full ${ae ? 'section' : 'branch'} level.`
+    : `Achievement against the full month's target, with your position among ${inGroup}.`;
+
+  renderParams(agg, paramRanks());
+  renderDrill();
+  renderFoot(sum);
+}
+
+const kpi = (label, v, unit, note, cls) =>
+  `<div class="kpi"><span class="eyebrow">${label}</span>
+   <div class="v ${cls}">${v}<small>${unit}</small></div><div class="d">${note}</div></div>`;
+
+/* ---- channel scorecard: Branch Manager only ---- */
+function renderChannels(ae) {
+  const block = $('chanBlock');
+  if (ae) { block.classList.add('hide'); return; }
+  block.classList.remove('hide');
+
+  const chans = [...new Set(rowsOfBranch[S.br].map(r => PM[r[R.P]].channel))].sort();
+  $('chanNote').textContent =
+    `Each channel scored on its own parameters and ranked across the ${CONFIG.districtName.toLowerCase()}.`;
+
+  $('chans').innerHTML = chans.map(ch => {
+    const mask = D.params.map((_, p) => PM[p].channel === ch);
+    const st = summarise(aggregate(rowsOfBranch[S.br], mask));
+    const ladder = branchChannelLadder(ch);
+    const mine = ladder.find(i => i.id === S.br);
+    const ach = st.ach;
+    const w = ach == null ? 0 : Math.min(100, ach / 1.5);
+    return `<div class="chan ${mine && mine.rank === 1 ? 'lead' : ''}">
+      <div class="ch-top">
+        <span class="ch-nm">${esc(ch)}</span>
+        <span class="ch-rk">${mine ? `<b>${mine.rank}</b>/${ladder.length}` : '—'} in district</span>
+      </div>
+      <div class="ch-v ${achClass(ach)}">${ach == null ? '—' : ach.toFixed(0)}<small>%</small></div>
+      <div class="ch-d">${st.hit}/${st.scorable} on target · ${signPct(st.gLM)} vs LM</div>
+      <div class="ch-bar"><span style="width:${w}%;background:${barColour(ach)}"></span>
+        <u style="left:${(gate() / 1.5).toFixed(1)}%"></u></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- standings ladder ---- */
+function renderLadder(items, me, inGroup) {
+  const box = $('ladder');
+  if (!items.length) { box.innerHTML = '<div class="empty">No peers have scorable parameters in this view.</div>'; return; }
+
+  const top = Math.max(1, ...items.map(i => Math.max(0, i.rv)));  // rv === stat.ach
+  const idx = me ? items.indexOf(me) : -1;
+  const keep = new Set();
+  if (items.length <= 12) items.forEach((_, i) => keep.add(i));
+  else {
+    [0, 1, 2].forEach(i => keep.add(i));
+    if (idx >= 0) for (let i = idx - 2; i <= idx + 2; i++) if (i >= 0 && i < items.length) keep.add(i);
+    keep.add(items.length - 1);
+  }
+
+  let h = '';
+  if (me && idx > 0) {
+    const ahead = items[idx - 1];
+    h += `<div class="lgap"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><path d="M5.5 1v9M2 4.5 5.5 1 9 4.5" stroke="#E0A73C" stroke-width="1.4"/></svg>
+      <span>${(ahead.rv - me.rv).toFixed(1)} points behind <b>${esc(ahead.label)}</b> in ${ordinal(ahead.rank)} place.</span></div>`;
+  } else if (me && idx === 0) {
+    h += `<div class="lgap"><svg width="11" height="11" viewBox="0 0 11 11" fill="none"><circle cx="5.5" cy="5.5" r="4.2" stroke="#E0A73C" stroke-width="1.4"/></svg>
+      <span>Leading ${inGroup}${items[1] ? ` by ${(me.rv - items[1].rv).toFixed(1)} points` : ''}.</span></div>`;
+  }
+
+  let prev = -1;
+  [...keep].sort((a, b) => a - b).forEach(i => {
+    const it = items[i], mine = me && it.id === me.id, gapRow = prev >= 0 && i > prev + 1;
+    prev = i;
+    h += `<div class="lrow ${mine ? 'me' : ''} ${gapRow ? 'gapmark' : ''}">
+      <div class="lrk">${it.rank}</div>
+      <div class="lnm"><b>${esc(it.label)}${mine ? ' — you' : ''}</b>
+        <i>${esc(it.sub)} · ${it.stat.hit}/${it.stat.scorable} on target</i>
+        <div class="lbar"><span style="width:${Math.max(2, Math.min(100, 100 * Math.max(0, it.rv) / top))}%"></span></div></div>
+      <div class="lsc ${mine ? 'bra' : ''}">${it.stat.ach == null ? '—' : it.stat.ach.toFixed(0)}<span style="font-size:11px;color:var(--faint)">%</span></div>
+    </div>`;
+  });
+  h += `<div class="lfoot">Ranked on Achvd %, across ${items.length} ${inGroup}.</div>`;
+  box.innerHTML = h;
+}
+
+/* ---- MAP parameter table ---- */
+function renderParams(agg, pranks) {
+  let list = [...agg.values()];
+  if (S.show === 'hit')  list = list.filter(e => e.hit === true);
+  if (S.show === 'miss') list = list.filter(e => e.hit === false);
+  if (S.show === 'nd')   list = list.filter(e => !e.scorable);
+
+  const cols = [
+    { k: 'name', t: 'Parameter' }, { k: 'tgt', t: 'Target' },
+    { k: 'pace', t: `Wk ${CONFIG.week} need` }, { k: 'act', t: 'Actual' },
+    { k: 'ach', t: 'Achvd %' }, { k: 'lm', t: 'vs LM' }, { k: 'rk', t: 'Rank' }
+  ];
+
+  const key = e => ({
+    name: D.params[e.p], tgt: e.t, pace: e.paced ?? -1, act: e.a,
+    ach: e.ach ?? -1, lm: e.gLM ?? -1e9,
+    rk: pranks.has(e.p) ? pranks.get(e.p).rank : 1e9
+  }[S.sortP.k]);
+  list.sort((a, b) => {
+    const x = key(a), y = key(b);
+    const c = typeof x === 'string' ? x.localeCompare(y) : y - x;
+    return S.sortP.d * (S.sortP.k === 'rk' ? -c : c);
+  });
+
+  const head = cols.map(c =>
+    `<th class="s" data-k="${c.k}">${c.t}${S.sortP.k === c.k ? ` <span class="ar">${S.sortP.d > 0 ? '▼' : '▲'}</span>` : ''}</th>`).join('');
+
+  const body = list.map(e => {
+    const m = PM[e.p], pr = pranks.get(e.p);
+    // Bar runs to the full target; the marker sits at this week's gate.
+    const span = Math.max(e.t, e.a || 0);
+    const bar = e.scorable
+      ? `<div class="mini"><span style="width:${Math.min(100, 100 * e.a / span)}%;background:${e.hit ? 'var(--pos)' : 'var(--neg)'}"></span>
+         <u style="left:${Math.min(99, 100 * e.paced / span)}%"></u></div>` : '';
+    return `<tr>
+      <td><span class="pname">${esc(D.params[e.p])}</span>
+        <span class="pmeta">${esc(m.channel)} · ${esc(m.metric)} · ${plur(e.wds.size, 'WD')}</span>
+        <span class="pstat">${e.scorable ? (e.hit ? '<span class="tag ok">On target</span>' : '<span class="tag no">Behind</span>')
+                                          : (e.t > 0 ? '<span class="tag nd">Awaiting data</span>' : '<span class="tag nd">No target</span>')}</span>
+        ${bar}</td>
+      <td>${fmtVal(e.t)}</td>
+      <td class="non">${e.paced == null ? '—' : fmtVal(e.paced)}</td>
+      <td>${e.nA ? fmtVal(e.a) : '<span class="non">—</span>'}</td>
+      <td class="num ${achClass(e.ach)}" style="font-size:16px">${e.ach == null ? '—' : e.ach.toFixed(0) + '%'}</td>
+      <td>${signPct(e.gLM)}</td>
+      <td>${pr ? `<span class="num" style="font-size:15px">${pr.rank}</span><span style="color:var(--faint);font-size:11px">/${pr.of}</span>` : '<span class="non">—</span>'}</td>
+    </tr>`;
+  }).join('');
+
+  $('ptbl').innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body || '<tr><td colspan="7" class="empty">No parameters match this view.</td></tr>'}</tbody>`;
+  $('ptbl').querySelectorAll('th.s').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (S.sortP.k === k) S.sortP.d *= -1; else { S.sortP.k = k; S.sortP.d = 1; }
+    render();
+  });
+}
+
+/* ---- breakdown ---- */
+function renderDrill() {
+  const ae = S.role === 'ae';
+  const mask = scopeMask();
+  let units;
+
+  if (ae) {
+    $('drillTitle').textContent = 'Distributor breakdown';
+    $('drillNote').textContent = 'Each WD in your section. Click a row to filter the view.';
+    const byWD = new Map();
+    rowsOfSection[S.sec].filter(r => mask[r[R.P]]).forEach(r => {
+      if (!byWD.has(r[R.W])) byWD.set(r[R.W], []);
+      byWD.get(r[R.W]).push(r);
+    });
+    units = [...byWD.entries()].map(([w, rs]) => ({
+      id: D.wds[w], label: D.wds[w],
+      sub: D.wdNames[w] + (D.cities[rs[0][R.CY]] ? ' · ' + D.cities[rs[0][R.CY]] : ''),
+      stat: summarise(aggregate(rs, null))
+    }));
+  } else {
+    $('drillTitle').textContent = 'Section breakdown';
+    $('drillNote').textContent = 'Every section in your branch, ranked against same-channel peers. Click a row to filter the view.';
+    let secs = secsOfBranch[S.br];
+    if (S.drill.circle) secs = secs.filter(s => D.circles[D.secCircle[s]] === S.drill.circle);
+    units = secs.map(s => ({
+      id: D.sections[s], label: D.sections[s],
+      sub: D.circles[D.secCircle[s]] + ' · ' + D.secChannel[s] + ' · ' + plur(wdsOfSection[s].size, 'WD'),
+      chan: D.secChannel[s], sid: s,
+      stat: summarise(aggregate(rowsOfSection[s].filter(r => mask[r[R.P]]), null))
+    }));
+    const byChan = {};
+    units.forEach(u => (byChan[u.chan] = byChan[u.chan] || []).push(u));
+    Object.values(byChan).forEach(g => {
+      const sorted = g.filter(u => u.stat.scorable > 0).sort((a, b) => rankValue(b.stat) - rankValue(a.stat));
+      sorted.forEach((u, i) => { u.rk = i + 1; u.rkOf = sorted.length; });
+    });
+  }
+
+  const key = u => ({
+    name: u.label, ach: u.stat.ach ?? -1, hit: u.stat.hit,
+    lm: u.stat.gLM ?? -1e9, rk: u.rk ?? 1e9
+  }[S.sortD.k]);
+  units.sort((a, b) => {
+    const x = key(a), y = key(b);
+    const c = typeof x === 'string' ? x.localeCompare(y) : y - x;
+    return S.sortD.d * (S.sortD.k === 'rk' ? -c : c);
+  });
+
+  const cols = [{ k: 'name', t: ae ? 'Distributor' : 'Section' },
+                ...(ae ? [] : [{ k: 'rk', t: 'Rank in channel' }]),
+                { k: 'ach', t: 'Achvd %' }, { k: 'hit', t: 'On target' }, { k: 'lm', t: 'vs LM' }];
+  const head = cols.map(c => `<th class="s" data-k="${c.k}">${c.t}${S.sortD.k === c.k ? ` <span class="ar">${S.sortD.d > 0 ? '▼' : '▲'}</span>` : ''}</th>`).join('');
+  const selVal = ae ? S.drill.wd : S.drill.section;
+
+  const body = units.map(u => {
+    const s = u.stat;
+    return `<tr class="clk ${selVal === u.id ? 'sel' : ''}" data-id="${esc(u.id)}">
+      <td><span class="pname">${esc(u.label)}</span><span class="pmeta">${esc(u.sub)}</span></td>
+      ${ae ? '' : `<td>${u.rk ? `<span class="num" style="font-size:15px">${u.rk}</span><span style="color:var(--faint);font-size:11px">/${u.rkOf}</span>` : '<span class="non">—</span>'}</td>`}
+      <td class="num ${achClass(s.ach)}" style="font-size:16px">${s.ach == null ? '—' : s.ach.toFixed(0) + '%'}</td>
+      <td>${s.hit}<span style="color:var(--faint)">/${s.scorable}</span></td>
+      <td>${signPct(s.gLM)}</td></tr>`;
+  }).join('');
+
+  $('dtbl').innerHTML = `<thead><tr>${head}</tr></thead><tbody>${body || `<tr><td colspan="${cols.length}" class="empty">Nothing to show for this view.</td></tr>`}</tbody>`;
+  $('dtbl').querySelectorAll('th.s').forEach(th => th.onclick = () => {
+    const k = th.dataset.k;
+    if (S.sortD.k === k) S.sortD.d *= -1; else { S.sortD.k = k; S.sortD.d = 1; }
+    render();
+  });
+  $('dtbl').querySelectorAll('tr.clk').forEach(tr => tr.onclick = () => {
+    const v = tr.dataset.id;
+    if (ae) S.drill.wd = (S.drill.wd === v ? '' : v);
+    else S.drill.section = (S.drill.section === v ? '' : v);
+    render();
+  });
+}
+
+function renderFoot(sum) {
+  const ph = [1, 2, 3, 4].map(w => `Wk ${w} ${(CONFIG.phase[w] * 100).toFixed(0)}%`).join(' · ');
+  $('foot').innerHTML = `
+    <b>Achvd %</b> is actual ÷ target for the full month, summed across the distributors in scope,
+    then averaged across parameters so outlets billed, sales value and multiplicity stay comparable.
+    <br><b>On target</b> follows the MAP pacing rule — ${ph}. August data runs to week ${CONFIG.week},
+    so a parameter counts as on target once it reaches <b>${gate().toFixed(0)}%</b> of the month's target.
+    The marker on each bar sits at that point, and the <i>Wk ${CONFIG.week} need</i> column shows it in units.
+    ${sum.nodata ? `A parameter with no target or no actuals is shown but left out of both figures (${sum.nodata} here).` : ''}
+    <br><b>Ranking</b> is on the same Achvd % shown above, so every ladder reads straight down.
+    ${S.role === 'ae'
+      ? 'Sections are ranked inside their own branch and channel, since a CFP section and a GR1B section work to different parameter sets.'
+      : 'Branches are ranked overall and again inside each channel. The channel ranks are the fairer read: CFP focus brands differ by branch, while the grocery channels are common to all seven.'}
+    <br><b>Source.</b> Cycle ${esc(ME.cycle || '')} · week ${CONFIG.week} · set in the admin panel.`;
+}
+
+(() => {
+  let saved = null;
+  try { saved = localStorage.getItem(CODE_KEY); } catch (_) {}
+  if (saved) { $('code').value = saved; loadAll(saved); }
+})();
+
+
+</script>
+</body>
+</html>
