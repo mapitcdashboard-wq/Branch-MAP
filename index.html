@@ -101,6 +101,28 @@ select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50
 .grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px}
 @media(max-width:900px){.grid2{grid-template-columns:minmax(0,1fr)}}
 
+/* Branch Manager keeps standings and parameters side by side, breakdown below. */
+#mainflow.bm{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:20px;align-items:start}
+#mainflow.bm #blkLadder{order:1}
+#mainflow.bm #blkParams{order:2}
+#mainflow.bm #blkDrill{order:3;grid-column:1/-1}
+/* Area Executive reads top to bottom: distributors, parameters, standings. */
+#mainflow.ae{display:flex;flex-direction:column;gap:26px}
+#mainflow.ae #blkDrill{order:1}
+#mainflow.ae #blkParams{order:2}
+#mainflow.ae #blkLadder{order:3}
+#mainflow .block{margin:0;min-width:0}
+@media(max-width:900px){
+  /* align-items:start above would stop blocks stretching once this is a flex column */
+  #mainflow.bm{display:flex;flex-direction:column;gap:26px;align-items:stretch}
+  #mainflow.bm #blkDrill{grid-column:auto}
+}
+
+/* the one instruction people miss */
+.hint{display:inline-block;color:var(--brass);background:rgba(224,167,60,.1);
+  border:1px solid rgba(224,167,60,.35);border-radius:3px;padding:2px 8px;
+  font-weight:600;font-size:11.5px;letter-spacing:.01em;white-space:nowrap}
+
 /* ---------- LADDER (signature) ---------- */
 .ladder{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .lrow{display:grid;grid-template-columns:38px 1fr 62px;align-items:center;gap:10px;padding:8px 13px;border-bottom:1px solid rgba(43,61,72,.6);position:relative}
@@ -190,7 +212,7 @@ select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50
     <div class="gate-box">
       <div class="fld">
         <label class="eyebrow" for="code">Access key</label>
-        <input class="inp" type="text" id="code" placeholder="e.g. BL1001K" maxlength="14"
+        <input class="inp" type="text" id="code" placeholder="" maxlength="16"
                autocomplete="off" autocapitalize="characters" spellcheck="false"
                style="letter-spacing:.14em;font-family:ui-monospace,Menlo,monospace">
       </div>
@@ -203,7 +225,7 @@ select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50
     <p class="gate-note">
       Your key decides what you see — an Area Executive gets their own section, a Branch
       Manager their own branch. Figures come from the latest upload in the admin panel.
-      Your key is your section or branch code plus a letter. Lost it, or seeing the wrong section? Ask your branch admin to reset it.
+      Lost your key, or seeing the wrong section? Ask your branch admin to reset it.
     </p>
   </div>
 </div>
@@ -233,26 +255,29 @@ select.inp{appearance:none;background-image:linear-gradient(45deg,transparent 50
     <div class="chans" id="chans"></div>
   </div>
 
-  <div class="grid2">
-    <div class="block" style="margin-top:0">
-      <div class="bhead"><h2 id="ladTitle">Standings</h2></div>
-      <div class="ladder" id="ladder"></div>
+  <!-- Order is set per role in render(): an AE reads distributors first,
+       then the parameters they drive, then where the section stands. -->
+  <div id="mainflow">
+    <div class="block" id="blkDrill">
+      <div class="bhead">
+        <h2 id="drillTitle">Breakdown</h2>
+        <p id="drillNote"></p>
+      </div>
+      <div class="wrap"><table class="tbl" id="dtbl"></table></div>
     </div>
-    <div class="block" style="margin-top:0">
+
+    <div class="block" id="blkParams">
       <div class="bhead">
         <h2>MAP parameters</h2>
         <p id="paramNote"></p>
       </div>
       <div class="wrap"><table class="tbl" id="ptbl"></table></div>
     </div>
-  </div>
 
-  <div class="block">
-    <div class="bhead">
-      <h2 id="drillTitle">Breakdown</h2>
-      <p id="drillNote"></p>
+    <div class="block" id="blkLadder">
+      <div class="bhead"><h2 id="ladTitle">Standings</h2></div>
+      <div class="ladder" id="ladder"></div>
     </div>
-    <div class="wrap"><table class="tbl" id="dtbl"></table></div>
   </div>
 
   <div class="foot" id="foot"></div>
@@ -746,6 +771,7 @@ function render() {
     $('rkVal').innerHTML = '—';
     $('rkLbl').textContent = 'No scorable parameters in this view';
   }
+  $('mainflow').className = ae ? 'ae' : 'bm';
   $('ladTitle').textContent = ae ? 'Section standings' : 'Branch standings';
   renderLadder(items, me, inGroup);
 
@@ -912,7 +938,7 @@ function renderDrill() {
 
   if (ae) {
     $('drillTitle').textContent = 'Distributor breakdown';
-    $('drillNote').textContent = 'Each WD in your section. Click a row to filter the view.';
+    $('drillNote').innerHTML = 'Each WD in your section. <span class="hint">Click a distributor to filter the view</span>';
     const byWD = new Map();
     rowsOfSection[S.sec].filter(r => mask[r[R.P]]).forEach(r => {
       if (!byWD.has(r[R.W])) byWD.set(r[R.W], []);
@@ -925,7 +951,7 @@ function renderDrill() {
     }));
   } else {
     $('drillTitle').textContent = 'Section breakdown';
-    $('drillNote').textContent = 'Every section in your branch, ranked against same-channel peers. Click a row to filter the view.';
+    $('drillNote').innerHTML = 'Every section in your branch, ranked against same-channel peers. <span class="hint">Click a section to filter the view</span>';
     let secs = secsOfBranch[S.br];
     if (S.drill.circle) secs = secs.filter(s => D.circles[D.secCircle[s]] === S.drill.circle);
     units = secs.map(s => ({

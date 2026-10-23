@@ -180,27 +180,14 @@ code.code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px
         <p>One key per section and per branch, built from the code itself. Generating is safe to repeat — it only fills gaps.</p></div>
       <div class="pane">
         <div class="row" style="margin-top:0">
-          <div class="f"><span class="eyebrow">Random letters after the code</span>
-            <select id="keyLen">
-              <option value="1">1 — BL1001K · 24 possible</option>
-              <option value="2">2 — BL1001KW · 576 possible</option>
-              <option value="3">3 — BL1001KWR · 13,824 possible</option>
-              <option value="4">4 — BL1001KWRQ · 331,776 possible</option>
-            </select></div>
           <button class="btn" id="genCodes">Generate missing keys</button>
           <button class="btn ghost" id="dlCodes">Download CSV</button>
           <button class="btn ghost" id="reissue" style="border-color:rgba(229,101,75,.5);color:var(--neg)">Reissue all keys</button>
           <div class="f"><span class="eyebrow">Filter</span><input id="codeFilter" placeholder="section, branch or code"></div>
         </div>
         <div id="genmsg"></div>
-        <p class="note">A key is the section or branch code plus random letters — <b>BL1001</b>
-          becomes <b>BL1001K</b> — so people only have to remember the tail. I and O are left out
-          because they get read back as 1 and 0 on a call.<br>
-          <b>Reset</b> replaces one key; <b>Reissue all</b> replaces every key at once. In both cases
-          the old key stops working straight away, so send the new CSV before anyone next signs in.<br>
-          <span style="color:var(--brass)">With one letter there are only 24 possible keys for a code,
-          and every AE already knows the section codes — someone could reach another section by trying
-          a few. Use three letters if these keys ever travel outside the branch.</span></p>
+        <p class="note">A key is the section or branch code plus two letters and a number — <b>BL1001</b> becomes <b>BL1001KW7</b> — so people only have to remember the tail. I, O, 0 and 1 are left out because they get misread when a key is read out on a call. That is 4,608 possible keys per code.<br>
+          <b>Reset</b> replaces one key; <b>Reissue all</b> replaces every key at once. In both cases the old key stops working straight away, so send the new CSV before anyone next signs in.</p>
       </div>
     </div>
     <div class="wrap"><table id="codeTbl"></table></div>
@@ -381,7 +368,6 @@ async function refresh(){
     `<option value="${esc(c)}"${c===o.active_cycle?' selected':''}>${esc(c)}</option>`).join('')
     || '<option value="">none loaded</option>';
   $('setWeek').value = o.current_week;
-  if (o.key_suffix_len) $('keyLen').value = o.key_suffix_len;
   if (!$('cycle').value) $('cycle').value = o.active_cycle || '';
 }
 
@@ -510,16 +496,8 @@ function drawCodes(){
 }
 $('codeFilter').oninput = drawCodes;
 
-$('keyLen').onchange = async () => {
-  const { error } = await SB.rpc('sb_set_key_len', { p_len: +$('keyLen').value });
-  if (error) return say('genmsg', esc(error.message), 'bad');
-  say('genmsg', `New keys will use ${$('keyLen').value} random letter${$('keyLen').value==='1'?'':'s'}. ` +
-      `Existing keys are unchanged until you reset or reissue them.`, 'ok');
-};
-
 $('genCodes').onclick = async () => {
   $('genCodes').disabled = true;
-  await SB.rpc('sb_set_key_len', { p_len: +$('keyLen').value });
   const { data, error } = await SB.rpc('sb_generate_logins');
   $('genCodes').disabled = false;
   if (error) return say('genmsg', esc(error.message), 'bad');
@@ -531,8 +509,7 @@ $('genCodes').onclick = async () => {
 
 $('reissue').onclick = async () => {
   const n = SCOPES.filter(s => s.login_code).length;
-  await SB.rpc('sb_set_key_len', { p_len: +$('keyLen').value });
-  if (!confirm(`Replace all ${n} existing keys, using ${$('keyLen').value} random letter(s)?\n\n` +
+  if (!confirm(`Replace all ${n} existing keys?\n\n` +
                `Every key already handed out stops working immediately. ` +
                `Download the new CSV and send it out before anyone next signs in.`)) return;
   if (!confirm('Last check — this cannot be undone. Reissue all keys?')) return;
